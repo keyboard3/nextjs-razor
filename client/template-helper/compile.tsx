@@ -1,23 +1,5 @@
-export const compileTemplte =
-  "compile((code,result)=>{return global.compile.compileValue(eval(code),result);";
+const compileTemplte = require("./config");
 
-/** 这个方法一定要内联到page页面模块中，否则code执行的模块依赖找不到 */
-export function rootCompile(func: any) {
-  if (typeof window !== "undefined" || process.env.NODE_ENV == "development") {
-    return func;
-  }
-  let code = func.toString();
-
-  code = code.replace(/compile\(\(\)=>{/g, compileTemplte);
-  code += `${func.name}`;
-  console.log(code);
-  return (...params: any) => {
-    //因为eval代码会被webpack识别出来，从而禁止掉了方法内联。所以我采用了webpack插件对内联之后的js资源，偷天换日成eval来执行
-    //eval中的代码运行时使用的是当前运行时上下文，所以必须用它
-    const funcRes = Function(code)();
-    return funcRes(...params);
-  };
-}
 /**
 * 目的是让预渲染运行时能够正确将指定的js代码转义成c#代码
 * @param func 需要转义js代码

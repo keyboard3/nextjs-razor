@@ -1,5 +1,5 @@
 import React from 'react'
-import { compile, rootCompile } from "../../template-helper/compile";
+import { compile } from "../../template-helper/compile";
 import { proxyModel } from '../../template-helper/proxy';
 function Home({ Model }: any) {
   const { data } = proxyModel(Model, modelGroups);
@@ -12,7 +12,7 @@ function Home({ Model }: any) {
     </div>
   );
 }
-export default rootCompile(Home);
+export default Home;
 
 
 const personModel = {
