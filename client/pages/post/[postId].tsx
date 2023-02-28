@@ -6,8 +6,8 @@ function Home({ Model }: any) {
   return (
     <div>
       {compile(() => {
-        if (data.basic.age > 30) return 5;
-        return 2;
+        if (data.basic.age > 30) return <h1>5</h1>;
+        return <h1>2</h1>;
       })}
     </div>
   );
@@ -33,7 +33,6 @@ const rootModel = {
   }
 }
 const modelGroups = { personModel, rootModel };
-/* unused harmony export myUnusedFunction */
 export async function getStaticProps(context: any) {
   if (process.env.NODE_ENV == "development") {
     const res = await fetch(`http://localhost:5002/api/post/${context.params.postId}`)

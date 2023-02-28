@@ -28,7 +28,6 @@ export function compile(func: any) {
   let reusltValueName = "";
   let resultCode = ""
 
-  debugger;
   const { t, babel, traverse } = (global as any).compile;
   const ast = babel.parse(code);
   traverse(ast, {

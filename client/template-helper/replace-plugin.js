@@ -12,6 +12,7 @@ class ReplaceFunctionPlugin {
           stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
         }, (assets) => {
           for (const [fileName, asset] of Object.entries(assets)) {
+            if (fileName.startsWith("static")) continue;
             if (/\.js$/.test(fileName)) {
               const content = asset.source().toString();
               const replaced = content.replace(
