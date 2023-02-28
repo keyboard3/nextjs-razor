@@ -1,5 +1,14 @@
 import ReactDOMServer from "react-dom/server";
 
+
+export function compilePrintValue(instruction: string, result: string) {
+  const value = normalValue({
+    instruction,
+    result
+  })
+  value.props.dangerouslySetInnerHTML.__html = `<!--${value.meta.instruction}${value.meta.result}-->`;
+  return value;
+}
 export function compileValue(instruction: string, result: string) {
   return normalValue({
     instruction,
@@ -12,7 +21,7 @@ export function normalValue(data: any): any {
   if (typeof window != "undefined" || process.env.NODE_ENV == "development") {
     return data;
   }
-  console.log("normalValue", data);
+  // console.log("normalValue", data);
   const modelGroups: any = (normalValue as any).modelGroups;
   const htmlProperty = { __html: "" }
   let vDOM: any = <div dangerouslySetInnerHTML={htmlProperty} />
@@ -21,6 +30,7 @@ export function normalValue(data: any): any {
     instruction: "",
     result: data
   }
+  
   if (typeof data == "object") {
     if (data.meta && data["$$typeof"]) return data;
 
@@ -31,12 +41,12 @@ export function normalValue(data: any): any {
     }
     const value = meta.value;
     if (value["$$typeof"]) {
-      //todo 处理成htmlRaw()
+      //找到所有变量，然后读取他们的指令
       meta.result = `@Html.Raw($@"${ReactDOMServer.renderToString(value).replace(/@([\w.]+)/g, "{$1}")}")`;
     } else {
       vDOM = new Proxy(vDOM, {
         get(target: any, prop: any, receiver: any): any {
-          console.log(`prop:${prop},value:`, value)
+          // console.log(`prop:${prop},value:`, value)
           if (prop == "map") {
             return function (itemCall: (item: any, index: number) => any) {
 
@@ -64,7 +74,7 @@ export function normalValue(data: any): any {
               result: meta?.result + `.${prop}`
             });
           }
-          console.log("vDOM." + prop, target[prop])
+          // console.log("vDOM." + prop, target[prop])
           return target[prop];
         }
       })
@@ -72,7 +82,7 @@ export function normalValue(data: any): any {
   } else if (typeof meta.result == "string") {
     meta.result = `"${meta.result}"`;
   }
-  htmlProperty.__html = `<!--${meta.instruction}${meta.result}-->`;
+  htmlProperty.__html = `<!--${meta.result}-->`;
   vDOM.meta = meta;
   return vDOM;
 }

@@ -1,20 +1,20 @@
 import React from 'react'
-import { compile } from "../../template-helper/compile";
+import { compile, compilePrint } from "../../template-helper/compile";
 import { proxyModel } from '../../template-helper/proxy';
 function Home({ Model }: any) {
   const { data } = proxyModel(Model, modelGroups);
 
-  const type = compile(() => {
-    if (data.basic.age > 30) return 1;
-    else return 2;
+  const age = compile(() => {
+    var res = data.basic.age + 1;
+    return res;
   });
   return (
     <div>
       <h1>{data.basic.name}</h1>
-      {compile(() => {
-        switch (type) {
-          case 1: return <h1>中老年 当前年龄:{data.basic.age}</h1>;
-          default: return <h1>青年 当前年龄:{data.basic.age}</h1>;
+      {compilePrint(() => {
+        switch (1) {
+          case 1: return <h1>中老年 当前年龄:{age}</h1>;
+          default: return <h1>青年 当前年龄:{age}</h1>;
         }
       })}
     </div>

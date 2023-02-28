@@ -1,6 +1,6 @@
 const { RawSource } = require("webpack-sources");
 const webpack = require("webpack");
-const compileTemplte = require("./config");
+const { compileTemplate, compilePrintTemplate } = require("./config");
 
 class ReplaceFunctionPlugin {
   apply(compiler) {
@@ -18,7 +18,8 @@ class ReplaceFunctionPlugin {
               const replaced = content.replace(
                 /Function\((.+?)\)\(\)/g,
                 "eval($1)",
-              ).replace(/compile\(\(\)=>{/g, compileTemplte);
+              ).replace(/compile\(\(\)=>{/g, compileTemplate)
+                .replace(/compilePrint\(\(\)=>{/g, compilePrintTemplate);
               assets[fileName] = new RawSource(replaced);
             }
           }

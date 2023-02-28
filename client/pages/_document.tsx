@@ -2,13 +2,14 @@ import { Html, Head, Main, NextScript } from 'next/document'
 const babel = require("@babel/core");
 const t = require('@babel/types');
 import traverse from "@babel/traverse";
-import { compileValue, normalValue } from '@/template-helper/proxy';
+import { compileValue, compilePrintValue, normalValue } from '@/template-helper/proxy';
 
 const compile: any = {};
 (global as any).compile = compile;
 compile.babel = babel;
 compile.t = t;
 compile.traverse = traverse;
+compile.compilePrintValue = compilePrintValue;
 compile.compileValue = compileValue;
 compile.normalValue = normalValue;
 
