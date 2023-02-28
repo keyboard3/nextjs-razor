@@ -1,13 +1,8 @@
 import React from 'react'
-import { compile as compileFun, compileTemplte } from "../../template-helper/compile";
-import { compileValue as compileValueFun, normalValue as normalValueFun, proxyModel } from '../../template-helper/proxy';
-const compile = compileFun;
-const compileValue = compileValueFun;
-const normalValue = normalValueFun;
+import { compile, rootCompile } from "../../template-helper/compile";
+import { proxyModel } from '../../template-helper/proxy';
 function Home({ Model }: any) {
   const { data } = proxyModel(Model, modelGroups);
-  console.log(compileValue);
-  console.log(normalValue)
   return (
     <div>
       {compile(() => {
@@ -18,21 +13,6 @@ function Home({ Model }: any) {
   );
 }
 export default rootCompile(Home);
-
-export function rootCompile(func: any) {
-  if (typeof window !== "undefined" || process.env.NODE_ENV == "development") {
-    return func;
-  }
-  let code = func.toString();
-
-  code = code.replace(/compile\(\(\)=>{/g, compileTemplte);
-  code += `${func.name}`;
-  console.log(code);
-  return (...params: any) => {
-    const funcRes = eval(code);
-    return funcRes(...params);
-  };
-}
 
 
 const personModel = {

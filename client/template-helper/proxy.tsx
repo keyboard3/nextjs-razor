@@ -1,6 +1,4 @@
-import { ReactElement } from "react";
 import ReactDOMServer from "react-dom/server";
-import { compile } from "./compile";
 
 /**
  * @param data
