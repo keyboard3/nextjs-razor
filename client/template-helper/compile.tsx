@@ -24,8 +24,8 @@ export function compile(func: any) {
   let reusltValueName = "";
   let resultCode = ""
 
-  const { t, babel, traverse } = (global as any).compile;
   debugger;
+  const { t, babel, traverse } = (global as any).compile;
   const ast = babel.parse(code);
   traverse(ast, {
     exit(path: any) {
@@ -77,36 +77,40 @@ export function compile(func: any) {
       let prefixInstructionCode = getCode(compiledCode);
       resultCode = prefixInstructionCode + "\n`@{\n" + `\${prefixInstruction}\n` + `var ${resultName}=\${${reusltValueName}.meta.result};\n` + replacedCode + "}`";
     },
-    IfStatement(path: any) {
-      path.traverse({
-        enter(innerPath: any) {
-          const { node: innerNode } = innerPath as any;
-          if (t.isIdentifier(innerNode) && allNames[innerNode.name]) {
-            innerPath.skip();
-            return;
-          }
-
-          if (innerNode.type === "CallExpression") {
-            const varName = generateUniqueVariableName("variable_" + (innerNode.callee.name ?? "")); 
-            const newNode = t.identifier(varName);
-            allNames[varName] = innerNode;
-
-            innerPath.replaceWith(newNode);
-            return;
-          }
-          // 如果当前节点是标识符或字面量，则将其替换为函数调用表达式
-          if (t.isIdentifier(innerNode) || t.isLiteral(innerNode)) {
-            const varName = generateUniqueVariableName("variable_" + (innerNode.name??""));
-            const newNode = t.identifier(varName);
-            allNames[varName] = innerNode;
-
-            innerPath.replaceWith(newNode);
-          }
-        },
-      })
+    enter(innerPath: any) {
+      const { node: innerNode } = innerPath as any;
+      if (t.isIdentifier(innerNode) && allNames[innerNode.name]) {
+        innerPath.skip();
+        return;
+      }
+      if (t.isAssignmentExpression(innerNode) && innerNode.left.name == resultName) {
+        innerPath.skip();
+        return;
+      }
+      if (t.isMemberExpression(innerNode)) {
+        const varName = generateUniqueVariableName("variable_");
+        const newNode = t.identifier(varName);
+        allNames[varName] = innerNode;
+        innerPath.replaceWith(newNode);
+        return;
+      }
+      if (t.isCallExpression(innerNode)) {
+        const varName = generateUniqueVariableName("variable_" + (innerNode.callee.name ?? ""));
+        const newNode = t.identifier(varName);
+        allNames[varName] = innerNode;
+        innerPath.replaceWith(newNode);
+        return;
+      }
+      // 如果当前节点是标识符或字面量，则将其替换为函数调用表达式
+      if (t.isIdentifier(innerNode) || t.isLiteral(innerNode)) {
+        const varName = generateUniqueVariableName("variable_" + (innerNode.name ?? ""));
+        const newNode = t.identifier(varName);
+        allNames[varName] = innerNode;
+        innerPath.replaceWith(newNode);
+      }
     },
   }, undefined, { isRoot: true });
-  console.log("----resultCode",resultCode);
+  console.log("----resultCode", resultCode);
   return func(resultCode, `@${resultName}`);
 }
 

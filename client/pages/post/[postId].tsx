@@ -1,8 +1,4 @@
-import React, { ReactElement, ReactNode } from 'react'
-import ReactDOMServer from "react-dom/server"
-// import type { NextPage } from 'next'
-import Link from 'next/link'
-import { useRouter } from 'next/router'
+import React from 'react'
 import { compile as compileFun, compileTemplte } from "../../template-helper/compile";
 import { compileValue as compileValueFun, normalValue as normalValueFun, proxyModel } from '../../template-helper/proxy';
 const compile = compileFun;
@@ -12,16 +8,11 @@ function Home({ Model }: any) {
   const { data } = proxyModel(Model, modelGroups);
   console.log(compileValue);
   console.log(normalValue)
-  const age = data.basic.age;
-  const resultAge = compile(() => {
-    if (age > 30) return 41;
-    else return 4;
-  });
   return (
     <div>
       {compile(() => {
-        if (resultAge > 40) return 13;
-        else return 14;
+        if (data.basic.age > 30) return 5;
+        return 2;
       })}
     </div>
   );
