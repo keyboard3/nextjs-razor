@@ -1,0 +1,36 @@
+{
+  "name": "client-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "export": "next export",
+    "build-export": "npm run build && next export && npm run copy",
+    "copy": "cd script && node export.mjs",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@next/font": "13.1.6",
+    "@types/node": "18.13.0",
+    "@types/react": "18.0.28",
+    "@types/react-dom": "18.0.10",
+    "eslint": "8.34.0",
+    "eslint-config-next": "13.1.6",
+    "next": "13.1.6",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "typescript": "4.9.5"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.20.7",
+    "@babel/core": "^7.21.0",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/traverse": "^7.21.2",
+    "@babel/types": "^7.21.2",
+    "@types/babel__core": "^7.20.0",
+    "babel-loader": "^9.1.2",
+    "babel-plugin-transform-rename-import": "^2.3.0"
+  }
+}
