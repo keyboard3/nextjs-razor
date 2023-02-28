@@ -5,8 +5,7 @@ function Home({ Model }: any) {
   const { data } = proxyModel(Model, modelGroups);
 
   const age = compile(() => {
-    var res = data.basic.age + 1;
-    return res;
+    return data.basic.age + 1;
   });
   return (
     <div>

@@ -30,7 +30,7 @@ export function normalValue(data: any): any {
     instruction: "",
     result: data
   }
-  
+
   if (typeof data == "object") {
     if (data.meta && data["$$typeof"]) return data;
 
@@ -58,7 +58,6 @@ export function normalValue(data: any): any {
               const arrayItem = normalValue(itemModel);
               let itemResult = itemCall(arrayItem, 0); //普通js函数调用，可能是 普通js变量,归一化对象，虚拟dom
               itemResult = normalValue(itemResult);
-              debugger;
               const renderModel = {
                 result: `${meta.instruction}${itemResult.meta.instruction || ""}
                 @foreach(var item in ${meta.result}) {
@@ -67,6 +66,14 @@ export function normalValue(data: any): any {
               }
               return normalValue(renderModel);
             }
+          }
+          // 从vDom中直接访问instruction属性，根据引用次数，只有第一次返回指令，后面返回空字符串
+          if (prop == "instruction") {
+            meta.returnInstructionCount = meta.returnInstructionCount || 0 + 1;
+            if (meta.returnInstructionCount > 1) {
+              return "";
+            }
+            return meta.instruction;
           }
           if (value[prop]) {
             return normalValue({

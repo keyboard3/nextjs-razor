@@ -29,7 +29,8 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
 
   console.log("compile before code", code);
   //因为jsx展开成c#代码时，c#变量是全局作用域，所以这里需要防止变量名生成唯一。这里暂时先不看全局的唯一，只靠随机
-  const allNames: any = {};
+  const newNamesNodeMap: any = {};
+  const namesMap: any = {};
   const whiteListNames: any = {};
   const resultName = generateUniqueVariableName("result_");
   let resultValueName = "";
@@ -47,7 +48,7 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
           if (t.isIdentifier(path.node.argument)) {
             resultValueName = path.node.argument.name;
           }
-          
+
           const newNode = t.variableDeclaration("var", [t.variableDeclarator(t.identifier(resultName), path.node.argument)]);
           path.replaceWith(newNode);
         }
@@ -56,17 +57,14 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
           path.parent.consequent.push(t.breakStatement());
         }
         if (t.isCallExpression(path.node)) {
-          const varName = generateUniqueVariableName("variable_" + (path.node.callee.name ?? ""));
-          const newNode = t.identifier(varName);
-          allNames[varName] = path.node;
-          path.replaceWith(newNode);
+          replaceIdentifierNode(path, path.node.callee.name,true);
           return;
         }
         return;
       }
       //提前捕获到所有声明的变量
-      const compiledCode = Object.keys(allNames).map((key) => {
-        const value = allNames[key];
+      const compiledCode = Object.keys(newNamesNodeMap).map((key) => {
+        const value = newNamesNodeMap[key];
         const args = [value];
         const callee = t.memberExpression(t.memberExpression(t.identifier("global"), t.identifier("compile")), t.identifier("normalValue"));
         const callExpr = t.callExpression(callee, args);
@@ -76,11 +74,11 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
       });
       //获取所有生成c#变量的所依赖的c#代码
       const prefixInstructionNode = t.stringLiteral("");
-      const prefixInstructionExpr = Object.keys(allNames).reduce((acc: any, key) => {
-        let instruction:any = t.memberExpression(t.memberExpression(t.identifier(key), t.identifier("meta")), t.identifier("instruction"));
+      const prefixInstructionExpr = Object.keys(newNamesNodeMap).reduce((acc: any, key) => {
+        let instruction: any = t.memberExpression(t.identifier(key), t.identifier("instruction"));
         return t.binaryExpression("+", acc, instruction);
       }, prefixInstructionNode);
-      console.log("prefixInstructionExpr", prefixInstructionExpr)
+
       //去掉之前c#代码块中的@{}，最外层只需要一个@{}就行了
       const replaceExpr = t.callExpression(
         babel.types.memberExpression(
@@ -104,15 +102,19 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
 
       let prefixInstructionCode = getCode(compiledCode);
       //因为这个代码最终要交给运行时处理，所以prefixInstructionCode用来捕获运行时变量，最后目的是拿到c#代码字符串
-
-      resultCode = prefixInstructionCode + "\n`@{\n" + `\${prefixInstruction&&(prefixInstruction+"\\n\\n")}` + `var ${resultName}=\${${resultValueName}.meta.result};\n` + replacedCode + "}`";
-      console.log("compile after code", resultCode);
+      resultCode = prefixInstructionCode;
+      resultCode += "\n`@{\n" + `\${prefixInstruction&&(prefixInstruction+"\\n\\n")}`;
+      if (resultValueName) {
+        resultCode += `var ${resultName}=\${${resultValueName}.meta.result};`;
+      }
+      resultCode += "\n" + replacedCode + "}`";
+      console.log("===compile after code", resultCode);
     },
     enter(innerPath: any) {
       console.log("enter node.path.type", innerPath.node.type)
       const { node: innerNode } = innerPath as any;
       //如果遇到已经处理过的变量名就直接跳过
-      if (t.isIdentifier(innerNode) && (allNames[innerNode.name] || whiteListNames[innerNode.name])) {
+      if (t.isIdentifier(innerNode) && (newNamesNodeMap[innerNode.name] || whiteListNames[innerNode.name])) {
         innerPath.skip();
         return;
       }
@@ -127,10 +129,7 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
         return;
       }
       if (t.isMemberExpression(innerNode)) {
-        const varName = generateUniqueVariableName("variable_");
-        const newNode = t.identifier(varName);
-        allNames[varName] = innerNode;
-        innerPath.replaceWith(newNode);
+        replaceIdentifierNode(innerPath, "")
         return;
       }
       // 如果当前节点是标识符或字面量，则将其替换为函数调用表达式
@@ -141,16 +140,25 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
           whiteListNames[innerNode.name] = true;
           return;
         }
-        const varName = generateUniqueVariableName("variable_" + (innerNode.name ?? ""));
-        const newNode = t.identifier(varName);
-        allNames[varName] = innerNode;
-        innerPath.replaceWith(newNode);
+        replaceIdentifierNode(innerPath, innerNode.name);
       }
     },
   }, undefined, { isRoot: true });
 
-  console.log("resultCode", resultCode);
+  console.log("===resultCode", resultCode);
   return func(resultCode, `@${resultName}`);
+  function replaceIdentifierNode(innerPath: any, oldName: string, force: boolean = false) {
+    const { node: innerNode } = innerPath as any;
+    let newName = ""
+    if (!force && namesMap[oldName]) newName = namesMap[oldName];
+    else {
+      newName = generateUniqueVariableName("variable_" + (oldName ?? ""));
+      namesMap[oldName] = newName;
+    }
+    const newNode = t.identifier(newName);
+    newNamesNodeMap[newName] = innerNode;
+    innerPath.replaceWith(newNode);
+  }
 }
 
 function getCode(node: any) {

@@ -36,6 +36,7 @@ async function changeNameAllFiles(dirPath) {
             content = content.replace(/<div><!--/g, "").replace(/--><\/div>/g, "");
             content = content.replace(/<!--/g, "").replace(/-->/g, "");
             content = content.replace(/@media/g, `@("@")media`);
+            content = content.replace(/undefined/g, "");
             content = content.replace(`"pageProps":{"Model":{}}`, `"pageProps":{"Model":@Html.Raw(Json.Serialize(@Model))}`);
             if (content.indexOf(`"pageProps":{}`) < 0)
                 content = content.replace(/"query":.+,"buildId"/, `"query":@Html.Raw(Json.Serialize(@Model.context.query)),"buildId"`)
