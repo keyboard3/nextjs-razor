@@ -3,11 +3,19 @@ import { compile } from "../../template-helper/compile";
 import { proxyModel } from '../../template-helper/proxy';
 function Home({ Model }: any) {
   const { data } = proxyModel(Model, modelGroups);
+
+  const type = compile(() => {
+    if (data.basic.age > 30) return 1;
+    else return 2;
+  });
   return (
     <div>
+      <h1>{data.basic.name}</h1>
       {compile(() => {
-        if (data.basic.age > 30) return <h1>5</h1>;
-        return <h1>2</h1>;
+        switch (type) {
+          case 1: return <h1>中老年 当前年龄:{data.basic.age}</h1>;
+          default: return <h1>青年 当前年龄:{data.basic.age}</h1>;
+        }
       })}
     </div>
   );

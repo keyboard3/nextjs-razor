@@ -1,11 +1,5 @@
 import ReactDOMServer from "react-dom/server";
 
-/**
- * @param data
- * @param severModel
- * @returns
- */
-
 export function compileValue(instruction: string, result: string) {
   return normalValue({
     instruction,
@@ -38,7 +32,7 @@ export function normalValue(data: any): any {
     const value = meta.value;
     if (value["$$typeof"]) {
       //todo 处理成htmlRaw()
-      meta.result = `@Html.Raw("${ReactDOMServer.renderToString(value)}")`;
+      meta.result = `@Html.Raw(@"${ReactDOMServer.renderToString(value)}")`;
     } else {
       vDOM = new Proxy(vDOM, {
         get(target: any, prop: any, receiver: any): any {
@@ -75,8 +69,10 @@ export function normalValue(data: any): any {
         }
       })
     }
+  } else if (typeof meta.result == "string") {
+    meta.result = `"${meta.result}"`;
   }
-  htmlProperty.__html = `<!--${meta.instruction}\n${meta.result}-->`;
+  htmlProperty.__html = `<!--${meta.instruction}${meta.result}-->`;
   vDOM.meta = meta;
   return vDOM;
 }

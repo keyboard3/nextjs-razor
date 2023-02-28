@@ -22,9 +22,11 @@ export function compile(func: any) {
   //将预处理过的运行时代码转换成普通箭头函数，方便ast分析，核心是分析函数的body代码块
   let code = func.toString();
   code = code.replace(compileTemplte.replace("compile(", ""), "()=>{");
-  //因为jsx展开成c#代码时，c#变量是全局作用域，所以这里需要防止变量名生成唯一
-  const allNames: any = (global as any).cacheNames || {};
-  const resultName = generateUniqueVariableName("result");
+
+  console.log("compile before code", code);
+  //因为jsx展开成c#代码时，c#变量是全局作用域，所以这里需要防止变量名生成唯一。这里暂时先不看全局的唯一，只靠随机
+  const allNames: any = {};
+  const resultName = generateUniqueVariableName("result_");
   let reusltValueName = "";
   let resultCode = ""
 
@@ -33,6 +35,7 @@ export function compile(func: any) {
   traverse(ast, {
     exit(path: any) {
       const isRoot = path.node.type === 'Program' && !path.parentPath;
+      console.log("exit path.node.type", path.node.type)
       if (!isRoot) {
         //当退出
         if (t.isReturnStatement(path.node)) {
@@ -40,9 +43,12 @@ export function compile(func: any) {
           const newNode = t.assignmentExpression('=', t.identifier(resultName), t.identifier(reusltValueName));
           path.replaceWith(newNode);
         }
+        //c#中每个swtich case 一定要有break语句
+        if (t.isSwitchCase(path.parent) && !t.isBreakStatement(path.parent.consequent[path.parent.consequent.length - 1])) {
+          path.parent.consequent.push(t.breakStatement());
+        }
         return;
       }
-
       //提前捕获到所有声明的变量
       const compiledCode = Object.keys(allNames).map((key) => {
         const value = allNames[key];
@@ -59,6 +65,7 @@ export function compile(func: any) {
         const instruction = t.memberExpression(t.memberExpression(t.identifier(key), t.identifier("meta")), t.identifier("instruction"));
         return t.binaryExpression("+", acc, instruction);
       }, prefixInstructionNode);
+      console.log("prefixInstructionExpr", prefixInstructionExpr)
       //去掉之前c#代码块中的@{}，最外层只需要一个@{}就行了
       const replaceExpr = t.callExpression(
         babel.types.memberExpression(
@@ -75,14 +82,18 @@ export function compile(func: any) {
 
       //获得执行语句的编译代码
       let programBodyCode = getCode((path.node as any).body[0].expression.body.body);
+      console.log("programBodyCode", programBodyCode)
       const replacedCode = programBodyCode.replace(/variable_(\w+)/g, (_: any, name: string) => {
         return `\${variable_${name}.meta.result}`;
       });
+
       let prefixInstructionCode = getCode(compiledCode);
       //因为这个代码最终要交给运行时处理，所以prefixInstructionCode用来捕获运行时变量，最后目的是拿到c#代码字符串
-      resultCode = prefixInstructionCode + "\n`@{\n" + `\${prefixInstruction}\n` + `var ${resultName}=\${${reusltValueName}.meta.result};\n` + replacedCode + "}`";
+      resultCode = prefixInstructionCode + "\n`@{\n" + `\${prefixInstruction}` + `\n\nvar ${resultName}=\${${reusltValueName}.meta.result};\n` + replacedCode + "}`";
+      console.log("compile afater code", resultCode);
     },
     enter(innerPath: any) {
+      console.log("enter node.path.type", innerPath.node.type)
       const { node: innerNode } = innerPath as any;
       //如果遇到已经处理过的变量名就直接跳过
       if (t.isIdentifier(innerNode) && allNames[innerNode.name]) {
@@ -117,7 +128,6 @@ export function compile(func: any) {
       }
     },
   }, undefined, { isRoot: true });
-  (global as any).cacheNames = allNames;
 
   console.log("resultCode", resultCode);
   return func(resultCode, `@${resultName}`);
