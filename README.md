@@ -51,20 +51,20 @@ razor View
 <div id="__next">
     <div>
       <h1>@Model.data.basic.name</h1>@{
-        var result_ukn3wm = 2;
-        if (@Model.data.basic.age > 30) result_ukn3wm = 1; else result_ukn3wm = 2;
+        var result_uqp0mq = 2;
+        if (@Model.data.basic.age > 30) result_uqp0mq = 1; else result_uqp0mq = 2;
 
-        var result_83e2c0 = @Html.Raw(@"<h1>青年 当前年龄:@Model.data.basic.age</h1>");
-        switch (@result_ukn3wm)
+        var result_zejuhz = @Html.Raw($@"<h1>青年 当前年龄:{Model.data.basic.age}</h1>");
+        switch (@result_uqp0mq)
         {
           case 1:
-            result_83e2c0 = @Html.Raw(@"<h1>中老年 当前年龄:@Model.data.basic.age</h1>");
+            result_zejuhz = @Html.Raw($@"<h1>中老年 当前年龄:{Model.data.basic.age}</h1>");
             break;
           default:
-            result_83e2c0 = @Html.Raw(@"<h1>青年 当前年龄:@Model.data.basic.age</h1>");
+            result_zejuhz = @Html.Raw($@"<h1>青年 当前年龄:{Model.data.basic.age}</h1>");
             break;
         }
-      }@result_83e2c0
+      }@result_zejuhz
     </div>
   </div>
 ```

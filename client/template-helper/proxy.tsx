@@ -32,7 +32,7 @@ export function normalValue(data: any): any {
     const value = meta.value;
     if (value["$$typeof"]) {
       //todo 处理成htmlRaw()
-      meta.result = `@Html.Raw(@"${ReactDOMServer.renderToString(value)}")`;
+      meta.result = `@Html.Raw($@"${ReactDOMServer.renderToString(value).replace(/@([\w.]+)/g, "{$1}")}")`;
     } else {
       vDOM = new Proxy(vDOM, {
         get(target: any, prop: any, receiver: any): any {
