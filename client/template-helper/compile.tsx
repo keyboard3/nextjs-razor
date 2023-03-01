@@ -2,9 +2,9 @@ const { compileTemplate, compilePrintTemplate } = require("./config");
 export function compilePrint(func: any) {
   return compile(func, compilePrintTemplate, "compilePrint");
 }
-if(typeof window=="undefined") {
-  (global as any).compile.whiteListNames={
-    "index":true //这给是c# foreach 中使用 index 索引用的变量，不能被替换
+if (typeof window == "undefined") {
+  (global as any).compile.whiteListNames = {
+    "index": true //这给是c# foreach 中使用 index 索引用的变量，不能被替换
   }
 }
 
@@ -37,7 +37,7 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
   //因为jsx展开成c#代码时，c#变量是全局作用域，所以这里需要防止变量名生成唯一。这里暂时先不看全局的唯一，只靠随机
   const newNamesNodeMap: any = {};
   const namesMap: any = {};
-  const whiteListNames: any = {...(global as any).compile.whiteListNames};
+  const whiteListNames: any = { ...(global as any).compile.whiteListNames };
   const resultName = generateUniqueVariableName("result_");
   let resultValueName = "";
   let resultCode = ""
@@ -63,7 +63,7 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
           path.parent.consequent.push(t.breakStatement());
         }
         if (t.isCallExpression(path.node)) {
-          replaceIdentifierNode(path, path.node.callee.name,true);
+          replaceIdentifierNode(path, path.node.callee.name, true);
           return;
         }
         return;
@@ -126,17 +126,27 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
       }
       resultCode += "\n" + replacedCode + "}`";
 
-      console.log("===namesMap",namesMap);
+      console.log("===namesMap", namesMap);
       console.log("===compile after code", resultCode);
     },
     enter(innerPath: any) {
-      console.log("enter node.path.type", innerPath.node.type)
+      console.log("enter node.path.type", innerPath.node.type, "innerPath.key", innerPath.key)
       const { node: innerNode } = innerPath as any;
       //如果遇到已经处理过的变量名就直接跳过
       if (t.isIdentifier(innerNode) && (newNamesNodeMap[innerNode.name] || whiteListNames[innerNode.name])) {
         innerPath.skip();
         return;
       }
+      // if (innerPath.key == 2) debugger;
+      // //判断是<div key的表达式就跳过>
+      if (innerPath.key == 2 
+        && t.isCallExpression(innerPath.parent)
+        && innerPath.parent.callee.expressions[1]?.property?.name == "jsxs"
+      ) {
+        innerPath.replaceWith(t.stringLiteral("key-value"));
+        innerPath.skip();
+        return;
+      };
       //如果是exit中return替换之后的赋值语句就直接跳过
       if (t.isAssignmentExpression(innerNode) && innerNode.left.name == resultName) {
         innerPath.skip();
