@@ -1,4 +1,5 @@
 import ReactDOMServer from "react-dom/server";
+import { compile } from "./compile";
 
 
 export function compilePrintValue(instruction: string, result: string) {
@@ -57,11 +58,14 @@ export function normalValue(data: any): any {
 
               const arrayItem = normalValue(itemModel);
               let itemResult = itemCall(arrayItem, 0); //普通js函数调用，可能是 普通js变量,归一化对象，虚拟dom
-              itemResult = normalValue(itemResult);
+              const resultName = itemResult.meta.result.replace("@","");
+              // itemResult = normalValue(itemResult);
               const renderModel = {
-                result: `${meta.instruction}${itemResult.meta.instruction || ""}
+                result: `${meta.instruction}
+                @{ var ${resultName} = @Html.Raw(""); }
                 @foreach(var item in ${meta.result}) {
-                  ${itemResult.meta.result}
+                  ${loopCsharpScope(itemResult.meta.instruction)
+                    .trim().replace(new RegExp(`var ${resultName}`, "g"), `${resultName}`)}@Html.Raw($@"{${resultName}}");
                 }`
               }
               return normalValue(renderModel);
@@ -100,4 +104,10 @@ export function proxyModel(data: any, modelGroups: any): any {
   }
   (normalValue as any).modelGroups = modelGroups;
   return normalValue(modelGroups.rootModel);
+}
+
+
+function loopCsharpScope(content: string) {
+  content = content.replace(/@{([\s\S]+)}/, "{$1}");
+  return content && (content + "\n")
 }

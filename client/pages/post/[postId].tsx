@@ -3,7 +3,6 @@ import { compile, compilePrint } from "../../template-helper/compile";
 import { proxyModel } from '../../template-helper/proxy';
 function Home({ Model }: any) {
   const { data } = proxyModel(Model, modelGroups);
-
   const type = compile(() => {
     return data.basic.age > 35 ? 1 : 2;
   });
@@ -19,6 +18,19 @@ function Home({ Model }: any) {
           default: return <h1>{typeStr} 当前年龄:{data.basic.age}</h1>;
         }
       })}
+      {
+        data.children.map((personModel: any) => {
+          const type = compile(() => {
+            return personModel.age > 10 ? 1 : 2;
+          });
+          const typeStr = compile(() => {
+            return type == 1 ? "幼儿园" : "没上学";
+          })
+          return compile(() => {
+            return <h2>{personModel.name} {typeStr}</h2>;
+          })
+        })
+      }
     </div>
   );
 }

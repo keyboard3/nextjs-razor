@@ -28,43 +28,67 @@ Next.js 页面
 ```jsx
 function Home({ Model }: any) {
   const { data } = proxyModel(Model, modelGroups);
-
   const type = compile(() => {
-    if (data.basic.age > 30) return 1;
-    else return 2;
+    return data.basic.age > 35 ? 1 : 2;
   });
+  const typeStr = compile(() => {
+    return type == 1 ? "中老年" : "青年";
+  })
   return (
     <div>
       <h1>{data.basic.name}</h1>
-      {compile(() => {
+      {compilePrint(() => {
         switch (type) {
-          case 1: return <h1>中老年 当前年龄:{data.basic.age}</h1>;
-          default: return <h1>青年 当前年龄:{data.basic.age}</h1>;
+          case 1: return <h1>{typeStr} 当前年龄:{data.basic.age}</h1>;
+          default: return <h1>{typeStr} 当前年龄:{data.basic.age}</h1>;
         }
       })}
+      {
+        data.children.map((personModel: any) => {
+          const type = compile(() => {
+            return personModel.age > 10 ? 1 : 2;
+          });
+          const typeStr = compile(() => {
+            return type == 1 ? "幼儿园" : "没上学";
+          })
+          return compile(() => {
+            return <h2>{personModel.name} {typeStr}</h2>;
+          })
+        })
+      }
     </div>
   );
 }
+export default Home;
 ```
 razor View
 ```c#
-<div id="__next">
-    <div>
-      <h1>@Model.data.basic.name</h1>@{
-        var result_uqp0mq = 2;
-        if (@Model.data.basic.age > 30) result_uqp0mq = 1; else result_uqp0mq = 2;
+<div><h1>@Model.data.basic.name</h1>
+@{
+var result_i3wm3t = @Model.data.basic.age > 35 ? 1 : 2;
+result_i3wm3t = @Model.data.basic.age > 35 ? 1 : 2;
+var result_212s0h = @result_i3wm3t == 1 ? "中老年" : "青年";
+var result_jzqm13=@Html.Raw($@"<h1>{result_212s0h} 当前年龄:{Model.data.basic.age}</h1>");
+switch (@result_i3wm3t) {
+  case 1:
+    result_jzqm13 = @Html.Raw($@"<h1>{result_212s0h} 当前年龄:{Model.data.basic.age}</h1>");
+    break;
+  default:
+    result_jzqm13 = @Html.Raw($@"<h1>{result_212s0h} 当前年龄:{Model.data.basic.age}</h1>");
+    break;
+}}
+@result_jzqm13
 
-        var result_zejuhz = @Html.Raw($@"<h1>青年 当前年龄:{Model.data.basic.age}</h1>");
-        switch (@result_uqp0mq)
-        {
-          case 1:
-            result_zejuhz = @Html.Raw($@"<h1>中老年 当前年龄:{Model.data.basic.age}</h1>");
-            break;
-          default:
-            result_zejuhz = @Html.Raw($@"<h1>青年 当前年龄:{Model.data.basic.age}</h1>");
-            break;
-        }
-      }@result_zejuhz
-    </div>
-  </div>
+@{ var result_k3qurn = @Html.Raw(""); }
+@foreach(var item in @Model.data.children) {
+  {
+  var result_m4ca3k = @item.age > 10 ? 1 : 2;
+  var result_c4ufiw = @result_m4ca3k == 1 ? "幼儿园" : "没上学";
+
+  result_k3qurn=@Html.Raw($@"<h2>{item.name} {result_c4ufiw}</h2>");
+  result_k3qurn = @Html.Raw($@"<h2>{item.name} {result_c4ufiw}</h2>");
+  }
+  @Html.Raw($@"{result_k3qurn}");
+}
+</div></div>
 ```
