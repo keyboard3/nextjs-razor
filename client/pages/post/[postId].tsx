@@ -19,15 +19,18 @@ function Home({ Model }: any) {
         }
       })}
       {
-        data.children.map((personModel: any) => {
+        data.children.map((personModel: any, index: number) => {
           const type = compile(() => {
             return personModel.age > 10 ? 1 : 2;
           });
           const typeStr = compile(() => {
             return type == 1 ? "幼儿园" : "没上学";
           })
+          const attachInfo = compile(() => {
+            return index < 1 ? "这个孩子失踪了" : ""
+          })
           return compile(() => {
-            return <h2>{personModel.name} {typeStr}</h2>;
+            return <h2>{personModel.name} {typeStr} {attachInfo}</h2>;
           })
         })
       }

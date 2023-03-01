@@ -62,10 +62,11 @@ export function normalValue(data: any): any {
               // itemResult = normalValue(itemResult);
               const renderModel = {
                 result: `${meta.instruction}
-                @{ var ${resultName} = @Html.Raw(""); }
+                @{ var ${resultName} = @Html.Raw(""); int index=0; }
                 @foreach(var item in ${meta.result}) {
                   ${loopCsharpScope(itemResult.meta.instruction)
-                    .trim().replace(new RegExp(`var ${resultName}`, "g"), `${resultName}`)}@Html.Raw($@"{${resultName}}");
+                    .trim().replace(new RegExp(`var ${resultName}`, "g"), `${resultName}`)}\n@Html.Raw($@"{${resultName}}");
+                  index++;
                 }`
               }
               return normalValue(renderModel);

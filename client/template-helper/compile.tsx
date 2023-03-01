@@ -2,6 +2,12 @@ const { compileTemplate, compilePrintTemplate } = require("./config");
 export function compilePrint(func: any) {
   return compile(func, compilePrintTemplate, "compilePrint");
 }
+if(typeof window=="undefined") {
+  (global as any).compile.whiteListNames={
+    "index":true //这给是c# foreach 中使用 index 索引用的变量，不能被替换
+  }
+}
+
 /**
 * 目的是让预渲染运行时能够正确将指定的js代码转义成c#代码
 * todo 先声明多个变量去重
@@ -31,7 +37,7 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
   //因为jsx展开成c#代码时，c#变量是全局作用域，所以这里需要防止变量名生成唯一。这里暂时先不看全局的唯一，只靠随机
   const newNamesNodeMap: any = {};
   const namesMap: any = {};
-  const whiteListNames: any = {};
+  const whiteListNames: any = {...(global as any).compile.whiteListNames};
   const resultName = generateUniqueVariableName("result_");
   let resultValueName = "";
   let resultCode = ""
@@ -80,7 +86,7 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
       }, prefixInstructionNode);
 
       //去掉之前c#代码块中的@{}，最外层只需要一个@{}就行了
-      const replaceExpr = t.callExpression(
+      let replaceExpr = t.callExpression(
         babel.types.memberExpression(
           prefixInstructionExpr,
           babel.types.identifier('replace')
@@ -90,6 +96,17 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
           babel.types.stringLiteral('$1')
         ]
       );
+      //去掉变量字符串中@
+      replaceExpr = t.callExpression(
+        babel.types.memberExpression(
+          replaceExpr,
+          babel.types.identifier('replace')
+        ),
+        [
+          babel.types.regExpLiteral('@', 'sg'),
+          babel.types.stringLiteral('')
+        ]
+      )
       const prefixInstruction = t.variableDeclaration("var", [t.variableDeclarator(t.identifier("prefixInstruction"), replaceExpr)]);
       compiledCode.push(prefixInstruction);
 
@@ -108,6 +125,8 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
         resultCode += `var ${resultName}=\${${resultValueName}.meta.result};`;
       }
       resultCode += "\n" + replacedCode + "}`";
+
+      console.log("===namesMap",namesMap);
       console.log("===compile after code", resultCode);
     },
     enter(innerPath: any) {
@@ -124,7 +143,7 @@ export function compile(func: any, template: any = compileTemplate, templateFun:
         return;
       }
       //只处理调用表达式的参数部分，调用对象部分不管
-      if (t.isSequenceExpression(innerNode) && innerPath.key == "callee") {
+      if (innerPath.key == "callee") {
         innerPath.skip();
         return;
       }
