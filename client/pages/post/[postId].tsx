@@ -4,16 +4,19 @@ import { proxyModel } from '../../template-helper/proxy';
 function Home({ Model }: any) {
   const { data } = proxyModel(Model, modelGroups);
 
-  const age = compile(() => {
-    return data.basic.age + 1;
+  const type = compile(() => {
+    return data.basic.age > 35 ? 1 : 2;
   });
+  const typeStr = compile(() => {
+    return type == 1 ? "中老年" : "青年";
+  })
   return (
     <div>
       <h1>{data.basic.name}</h1>
       {compilePrint(() => {
-        switch (1) {
-          case 1: return <h1>中老年 当前年龄:{age}</h1>;
-          default: return <h1>青年 当前年龄:{age}</h1>;
+        switch (type) {
+          case 1: return <h1>{typeStr} 当前年龄:{data.basic.age}</h1>;
+          default: return <h1>{typeStr} 当前年龄:{data.basic.age}</h1>;
         }
       })}
     </div>

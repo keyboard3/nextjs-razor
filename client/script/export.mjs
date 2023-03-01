@@ -35,6 +35,8 @@ async function changeNameAllFiles(dirPath) {
             let content = fs.readFileSync(newFile).toString()
             content = content.replace(/<div><!--/g, "").replace(/--><\/div>/g, "");
             content = content.replace(/<!--/g, "").replace(/-->/g, "");
+            content = content.replace(/\/\*#__PURE__\*\//g, "");
+            content = handleSameVar(content);
             content = content.replace(/@media/g, `@("@")media`);
             content = content.replace(/undefined/g, "");
             content = content.replace(`"pageProps":{"Model":{}}`, `"pageProps":{"Model":@Html.Raw(Json.Serialize(@Model))}`);
@@ -48,3 +50,16 @@ ${content}
 }
 
 await changeNameAllFiles('../../server/Views/');
+
+function handleSameVar(str) {
+    const regex = /(var\s+)(\w+)(\s*=)/g;
+    const variables = {};
+    const handledStr = str.replace(regex, (match, p1, p2, p3, offset) => {
+        if (variables[p2] !== undefined) {
+            return `${p2}${p3}`;
+        }
+        variables[p2] = offset;
+        return match;
+    });
+    return handledStr;
+}
