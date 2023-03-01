@@ -8,14 +8,14 @@ await fse.removeSync("../../server/Views/");
 await fse.copySync("../out", "../../server/wwwroot/", {
     filter: (src, dest) => {
         if (src == "../out") return true;
-        return src.indexOf("_next") >= 0 || src.indexOf("favicon.ico") >= 0;
+        return src.indexOf("_next") >= 0 || /.svg|.ico/.test(src) >= 0;
     }
 })
 
 await fse.copySync("../out", "../../server/Views/", {
     filter: (src, dest) => {
         if (src == "../out") return true;
-        return !(src.indexOf("_next") >= 0 || src.indexOf("favicon.ico") >= 0);
+        return !(src.indexOf("_next") >= 0 || /.svg|.ico/.test(src));
     }
 })
 
@@ -30,6 +30,7 @@ async function changeNameAllFiles(dirPath) {
         } else {
             const oldFile = filename;
             const newFile = oldFile.replace(".html", ".cshtml");
+            console.log("newFile", newFile, oldFile)
             if (oldFile == newFile) return;
             await fse.moveSync(oldFile, newFile, { overwrite: true })
             let content = fs.readFileSync(newFile).toString()
