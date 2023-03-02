@@ -9,7 +9,8 @@
     "build-export": "npm run build && next export && npm run copy",
     "copy": "cd script && node export.mjs",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@next/font": "13.1.6",
@@ -30,6 +31,7 @@
     "@babel/traverse": "^7.21.2",
     "@babel/types": "^7.21.2",
     "@types/babel__core": "^7.20.0",
+    "patch-package": "^6.5.1",
     "babel-loader": "^9.1.2",
     "babel-plugin-transform-rename-import": "^2.3.0"
   }
