@@ -68,16 +68,14 @@ razor View
 var result_i3wm3t = @Model.data.basic.age > 35 ? 1 : 2;
 result_i3wm3t = @Model.data.basic.age > 35 ? 1 : 2;
 var result_212s0h = @result_i3wm3t == 1 ? "中老年" : "青年";
-var result_jzqm13=@Html.Raw($@"<h1>{result_212s0h} 当前年龄:{Model.data.basic.age}</h1>");
-switch (@result_i3wm3t) {
+switch (@result_j0778w) {
   case 1:
-    result_jzqm13 = @Html.Raw($@"<h1>{result_212s0h} 当前年龄:{Model.data.basic.age}</h1>");
+    <h1>@result_o6mf7p 当前年龄:@Model.data.basic.age</h1>;
     break;
   default:
-    result_jzqm13 = @Html.Raw($@"<h1>{result_212s0h} 当前年龄:{Model.data.basic.age}</h1>");
+    <h1>@result_o6mf7p 当前年龄:@Model.data.basic.age</h1>;
     break;
 }}
-@result_jzqm13
 
 @{ var result_k3qurn = @Html.Raw(""); }
 @foreach(var item in @Model.data.children) {

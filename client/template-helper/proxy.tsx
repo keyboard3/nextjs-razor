@@ -1,14 +1,8 @@
 import ReactDOMServer from "react-dom/server";
-import { compile } from "./compile";
 
 
-export function compilePrintValue(instruction: string, result: string) {
-  const value = normalValue({
-    instruction,
-    result
-  })
-  value.props.dangerouslySetInnerHTML.__html = `<!--${value.meta.instruction}${value.meta.result}-->`;
-  return value;
+export function compilePrintValue(instruction: string) {
+  return <div dangerouslySetInnerHTML={{__html:`<!--${instruction}-->`}}></div>;
 }
 export function compileValue(instruction: string, result: string) {
   return normalValue({
@@ -17,8 +11,12 @@ export function compileValue(instruction: string, result: string) {
   })
 }
 
+export function normalValuePrint(data: any) {
+  return normalValue(data, false);
+}
+
 //将c#的模板数据对象转换成归一化对象
-export function normalValue(data: any): any {
+export function normalValue(data: any, pureHtml: boolean = true): any {
   if (typeof window != "undefined" || process.env.NODE_ENV == "development") {
     return data;
   }
@@ -31,7 +29,7 @@ export function normalValue(data: any): any {
     instruction: "",
     result: data
   }
-
+  debugger;
   if (typeof data == "object") {
     if (data.meta && data["$$typeof"]) return data;
 
@@ -42,8 +40,10 @@ export function normalValue(data: any): any {
     }
     const value = meta.value;
     if (value["$$typeof"]) {
+      const htmlStr = ReactDOMServer.renderToString(value)
       //找到所有变量，然后读取他们的指令
-      meta.result = `@Html.Raw($@"${ReactDOMServer.renderToString(value).replace(/@([\w.]+)/g, "{$1}")}")`;
+      if(pureHtml) meta.result = `@Html.Raw($@"${htmlStr.replace(/@([\w.]+)/g, "{$1}")}")`;
+      else meta.result = htmlStr;
     } else {
       vDOM = new Proxy(vDOM, {
         get(target: any, prop: any, receiver: any): any {
@@ -58,7 +58,7 @@ export function normalValue(data: any): any {
 
               const arrayItem = normalValue(itemModel);
               let itemResult = itemCall(arrayItem, 0); //普通js函数调用，可能是 普通js变量,归一化对象，虚拟dom
-              const resultName = itemResult.meta.result.replace("@","");
+              const resultName = itemResult.meta.result.replace("@", "");
               // itemResult = normalValue(itemResult);
               const renderModel = {
                 result: `${meta.instruction}
@@ -80,7 +80,7 @@ export function normalValue(data: any): any {
             }
             return meta.instruction;
           }
-          if (value[prop]) {
+          if (value[prop] != undefined) {
             return normalValue({
               value: value[prop],
               result: meta?.result + `.${prop}`
