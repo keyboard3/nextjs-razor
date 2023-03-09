@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "postinstall-postinstall": "^2.1.0"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.25.24"
   }
 }

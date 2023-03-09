@@ -1,8 +1,10 @@
 import React from 'react'
 import { compile, compilePrint } from "../../template-helper/compile";
 import { proxyModel } from '../../template-helper/proxy';
+import { Static, Type } from '@sinclair/typebox'
+
 function Home({ Model }: any) {
-  const { data } = proxyModel(Model, modelGroups);
+  const { data } = proxyModel<RootModel>(Model, modelGroups);
   const type = compile(() => {
     return data.basic.age > 35 ? 1 : 2;
   });
@@ -19,7 +21,7 @@ function Home({ Model }: any) {
         }
       })}
       {
-        data.children.map((personModel: any, index: number) => {
+        data.children.map((personModel: PersonModel, index: number) => {
           const type = compile(() => {
             return personModel.age > 6 ? 1 : 2;
           });
@@ -34,34 +36,63 @@ function Home({ Model }: any) {
           })
         })
       }
+
     </div>
   );
 }
 export default Home;
 
 
-const personModel = {
-  result: "@item",
-  name: 'string',
-  age: 1
-}
-const rootModel = {
-  result: "@Model",
-  data: {
+const personModel = Type.Object({
+  result: "@item" as any,
+  name: Type.String(),
+  age: Type.Number()
+});
+type PersonModel = Static<typeof personModel>;
+
+const rootModel = Type.Object({
+  result: "@Model" as any,
+  data: Type.Object({
     basic: { ...personModel },
-    children: []
-  },
-  context: {
-    query: {
-      postId: 1
-    }
-  }
-}
+    children: Type.Array({ ...personModel })
+  }),
+  context: Type.Object({
+    query: Type.Object({
+      postId: Type.Number()
+    })
+  })
+});
+type RootModel = Static<typeof rootModel>;
 const modelGroups = { personModel, rootModel };
 export async function getStaticProps(context: any) {
   if (process.env.NODE_ENV == "development") {
-    const res = await fetch(`http://localhost:5002/api/post/${context.params.postId}`)
-    const data = await res.json();
+    let data = null;
+    try {
+      const res = await fetch(`http://localhost:5002/api/post/${context.params.postId}`)
+      data = await res.json();
+    } catch (e) {
+      data = {
+        context: {
+          query: context.params
+        },
+        data: {
+          basic: {
+            name: "张三",
+            age: 48
+          },
+          children: [
+            {
+              name: "女儿1",
+              age: 7,
+            },
+            {
+              name: "女儿2",
+              age: 4,
+            }
+          ]
+        }
+      }
+    }
     return {
       props: {
         Model: data
