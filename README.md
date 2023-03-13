@@ -46,9 +46,9 @@ function Home({ Model }: any) {
       {
         data.children.map((personModel: PersonModel, index: number) => {
           return compilePrint(() => {
-            var type = personModel.age > 6 ? 1 : 2;;
-            var typeStr = type == 1 ? "幼儿园" : "没上学";;
-            var attachInfo = index < 1 ? "这个孩子失踪了" : "";
+            const type = personModel.age > 6 ? 1 : 2;;
+            const typeStr = type == 1 ? "幼儿园" : "没上学";;
+            const attachInfo = index < 1 ? "这个孩子失踪了" : "";
             return <h2 className={styles.title} key={personModel.name}>{personModel.name} {typeStr} {attachInfo}</h2>;
           })
         })

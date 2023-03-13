@@ -222,6 +222,11 @@ function transferCompile(code: string, enterCallback?: (path: any, t: any) => bo
         replaceIdentifierNode(innerPath, innerNode.name);
       }
     },
+    VariableDeclaration(path:any) {
+      if (path.node.kind === 'let' || path.node.kind === 'const') {
+          path.node.kind = 'var';
+      }
+    }
   }, undefined, { isRoot: true });
   console.log("transferCompile", prefixInstructionCode, programBodyCode)
   return { programBodyCode, prefixInstructionCode }
