@@ -57,15 +57,15 @@ export const normalValue: NormalValueFunc = (data: TSchema | NormalReactElement 
       meta.result = data.result || "";
 
       const value = meta.value;
-      if (!meta.result&&isProxyTObject(value)) {
+      if (!meta.result && isProxyTObject(value)) {
         meta.result = value.properties["result"];
       }
       //console.log("----Proxy meta", meta)
       vDOM = new Proxy(vDOM, {
         get(target: any, prop: any, receiver: any): any {
           //console.log("proxy get",prop,meta,"-----target",target);
-          if(prop=="toString") return meta.result;
-          if(prop=="valueOf") return ()=>meta.result;
+          if (prop == "toString") return meta.result;
+          if (prop == "valueOf") return () => meta.result;
           if (prop == "map") {
             return function (itemCall: (item: any, index: number) => any) {
 
@@ -73,7 +73,7 @@ export const normalValue: NormalValueFunc = (data: TSchema | NormalReactElement 
               const itemArray = /\((.+?)\b/.exec(itemCallCode)
               const modelName = itemArray?.[1] || "item";
               let itemModel = modelGroups![modelName] as any;
-             
+
               if (!itemModel && meta.value?.type == "array") itemModel = meta.value.items;
               itemModel.properties = itemModel.properties || {};
               itemModel.properties["result"] = "@item";
@@ -109,7 +109,7 @@ export const normalValue: NormalValueFunc = (data: TSchema | NormalReactElement 
                 result: meta.result + `.${prop}`
               });
             }
-            if(!value.properties?.[prop]) return target[prop];
+            if (!value.properties?.[prop]) return target[prop];
             return target;
           }
           // 从vDom中直接访问instruction属性，根据引用次数，只有第一次返回指令，后面返回空字符串
@@ -129,7 +129,7 @@ export const normalValue: NormalValueFunc = (data: TSchema | NormalReactElement 
     meta.value = data;
     meta.result = data;
   }
-  htmlProperty.__html = `<!--${meta.instruction||""}${meta.result}-->`;
+  htmlProperty.__html = `<!--${meta.instruction || ""}${meta.result}-->`;
   vDOM.meta = meta;
   return vDOM;
 }
@@ -144,6 +144,6 @@ export function proxyModel<T>(data: TSchema, modelGroups: { [key: string]: TSche
 
 
 function removeCsharpScope(content: string) {
-  content = content.replace(/@{([\s\S]+)}/, "{$1}");
+  content = content.replace(/@/g, "");
   return content && (content + "\n")
 }

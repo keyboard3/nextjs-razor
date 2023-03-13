@@ -1,5 +1,4 @@
 import React from 'react'
-import { compile, compilePrint } from "../../template-helper/compile";
 import { proxyModel } from '../../template-helper/proxy';
 import { Static, Type } from '@sinclair/typebox'
 import styles from "./styles.module.css";
@@ -23,16 +22,10 @@ function Home({ Model }: any) {
       })}
       {
         data.children.map((personModel: PersonModel, index: number) => {
-          const type = compile(() => {
-            return personModel.age > 6 ? 1 : 2;
-          });
-          const typeStr = compile(() => {
-            return type == 1 ? "幼儿园" : "没上学";
-          })
-          const attachInfo = compile(() => {
-            return index < 1 ? "这个孩子失踪了" : ""
-          })
           return compilePrint(() => {
+            var type = personModel.age > 6 ? 1 : 2;;
+            var typeStr = type == 1 ? "幼儿园" : "没上学";;
+            var attachInfo = index < 1 ? "这个孩子失踪了" : "";
             return <h2 className={styles.title} key={personModel.name}>{personModel.name} {typeStr} {attachInfo}</h2>;
           })
         })

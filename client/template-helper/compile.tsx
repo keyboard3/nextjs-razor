@@ -1,12 +1,5 @@
 const { compileTemplate, compilePrintTemplate } = require("./config");
 
-if (typeof window == "undefined") {
-  (global as any).compile.whiteListNames = {
-    "index": true, //这给是c# foreach 中使用 index 索引用的变量，不能被替换
-    "props": true,//给react组件传递的props
-  }
-}
-
 /**
 * 目的是让预渲染运行时能够正确将指定的js代码转义成c#代码
 * todo 先声明多个变量去重
@@ -102,11 +95,11 @@ export function compilePrint(func: any, template: any = compilePrintTemplate, te
 }
 
 function transferCompile(code: string, enterCallback?: (path: any, t: any) => boolean, exitCallback?: (path: any, t: any) => boolean) {
-  const { t, babel, traverse } = (global as any).compile;
+  const { t, babel, traverse } = global.compile;
   const ast = babel.parse(code);
   const newNamesNodeMap: any = {};
   const namesMap: any = {};
-  const whiteListNames: any = { ...(global as any).compile.whiteListNames };
+  const whiteListNames = { ...global.compile.whiteListNames };
   let programBodyCode = "", prefixInstructionCode = "";
   traverse(ast, {
     exit(path: any) {
@@ -180,8 +173,8 @@ function transferCompile(code: string, enterCallback?: (path: any, t: any) => bo
         return `${_}.meta.result`;
       });
       //当被用作vdom children是用归一化对象
-      prefixInstructionCode = prefixInstructionCode.replace(/\/\*#__PURE__\*\/variable_([\w.]+)/g,(_:any,name:string) =>{
-        return _.replace(".meta.result","");
+      prefixInstructionCode = prefixInstructionCode.replace(/\/\*#__PURE__\*\/variable_([\w.]+)/g, (_: any, name: string) => {
+        return _.replace(".meta.result", "");
       })
     },
     enter(innerPath: any) {
@@ -194,11 +187,12 @@ function transferCompile(code: string, enterCallback?: (path: any, t: any) => bo
         return;
       }
       if (t.isMemberExpression(innerNode)) {
-        if (innerNode.object?.name?.startsWith("jsx_runtime")) {
+        const memberFirstName = t.isIdentifier(innerNode.object) && innerNode.object.name || "";
+        if (memberFirstName.startsWith("jsx_runtime")) {
           innerPath.skip();
           return;
         }
-        replaceIdentifierNode(innerPath, generateUniqueVariableName(innerNode.object?.name + "_"))
+        replaceIdentifierNode(innerPath, generateUniqueVariableName(memberFirstName + "_"))
         return;
       }
       if (t.isCallExpression(innerPath.parent)
@@ -248,7 +242,7 @@ function transferCompile(code: string, enterCallback?: (path: any, t: any) => bo
 }
 
 function getCode(node: any) {
-  const { t, babel } = (global as any).compile;
+  const { t, babel } = global.compile;
   const program = t.program(node);
   const outputAst = t.file(program);
   const output: any = babel.transformFromAstSync(outputAst, undefined, {});
@@ -257,7 +251,7 @@ function getCode(node: any) {
 export function generateUniqueVariableName(prefix: string) {
   let name = '';
   const possibleChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  const cacheNames = (global as any).cacheNames || {};
+  const cacheNames = global.compile.cacheNames || {};
   do {
     // 生成一个由 6 个字符组成的随机字符串
     name = prefix;
@@ -266,6 +260,6 @@ export function generateUniqueVariableName(prefix: string) {
     }
   } while (cacheNames[name] !== undefined);
   cacheNames[name] = true;
-  (global as any).cacheNames = cacheNames;
+  global.compile.cacheNames = cacheNames;
   return name;
 }
