@@ -34,6 +34,7 @@ async function changeNameAllFiles(dirPath) {
             if (oldFile == newFile) return;
             await fse.moveSync(oldFile, newFile, { overwrite: true })
             let content = fs.readFileSync(newFile).toString()
+            content = content.replace(/<!-- -->/g,"");
             content = content.replace(/<div><!--/g, "").replace(/--><\/div>/g, "");
             content = content.replace(/<!--/g, "").replace(/-->/g, "");
             content = content.replace(/\/\*#__PURE__\*\//g, "");
