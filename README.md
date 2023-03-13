@@ -1,7 +1,7 @@
 # nextjs-razor
 将 nextjs 的服务端渲染过程转译成 .net 的 razor 视图引擎的视图
 
-## clinet
+## client
 - dev 开发
 
     需要 .net 项目提供聚合 api 服务，所以需要 server 项目启动起来
@@ -26,8 +26,8 @@
 ## 转译示例
 Next.js 页面
 ```jsx
-function Home({ Model }: any) {
-  const { data } = proxyModel<RootModel>(Model, modelGroups);
+function Home({ Model }: { Model: TSchema }) {
+  const { data } = proxyModel<RootModel>(Model, Types);
   const type = compile(() => {
     return data.basic.age > 35 ? 1 : 2;
   });
@@ -35,7 +35,7 @@ function Home({ Model }: any) {
     return type == 1 ? "中老年" : "青年";
   })
   return (
-    <div >
+    <div>
       <h1>{data.basic.name}</h1>
       {compilePrint(() => {
         switch (type) {
@@ -44,16 +44,15 @@ function Home({ Model }: any) {
         }
       })}
       {
-        data.children.map((personModel: PersonModel, index: number) => {
+        data.children.map((item: PersonModel, index: number) => {
           return compilePrint(() => {
-            const type = personModel.age > 6 ? 1 : 2;;
+            const type = item.age > 6 ? 1 : 2;;
             const typeStr = type == 1 ? "幼儿园" : "没上学";;
             const attachInfo = index < 1 ? "这个孩子失踪了" : "";
-            return <h2 className={styles.title} key={personModel.name}>{personModel.name} {typeStr} {attachInfo}</h2>;
+            return <h2 className={styles.title} key={item.name}>{item.name} {typeStr} {attachInfo}</h2>;
           })
         })
       }
-
     </div>
   );
 }

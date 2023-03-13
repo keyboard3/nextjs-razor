@@ -35,7 +35,7 @@ function isProxyTObject(value: any): value is TSchema {
 }
 
 //将c#的模板数据对象转换成归一化对象
-export const normalValue: NormalValueFunc = (data: TSchema | NormalReactElement | MetaType, pureHtml: boolean = true) => {
+export const normalValue: NormalValueFunc = (data: TSchema | NormalReactElement | MetaType) => {
   if (typeof window != "undefined" || process.env.NODE_ENV == "development") {
     return data;
   }
@@ -139,8 +139,8 @@ export function proxyModel<T>(data: TSchema, modelGroups: { [key: string]: TSche
   if (typeof window != "undefined" || process.env.NODE_ENV == "development") {
     return data as T;
   }
-  (normalValue as any).modelGroups = modelGroups;
-  return normalValue<T>(modelGroups.rootModel);
+  normalValue.modelGroups = modelGroups;
+  return normalValue<T>(modelGroups.RootModel);
 }
 
 

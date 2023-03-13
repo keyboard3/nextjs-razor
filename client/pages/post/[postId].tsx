@@ -1,10 +1,11 @@
-import React from 'react'
 import { proxyModel } from '../../template-helper/proxy';
-import { Static, Type } from '@sinclair/typebox'
+import * as Types from "../types";
+import { RootModel, PersonModel } from '../types';
 import styles from "./styles.module.css";
+import { TSchema } from '@sinclair/typebox';
 
-function Home({ Model }: any) {
-  const { data } = proxyModel<RootModel>(Model, modelGroups);
+function Home({ Model }: { Model: TSchema }) {
+  const { data } = proxyModel<RootModel>(Model, Types);
   const type = compile(() => {
     return data.basic.age > 35 ? 1 : 2;
   });
@@ -21,12 +22,12 @@ function Home({ Model }: any) {
         }
       })}
       {
-        data.children.map((personModel: PersonModel, index: number) => {
+        data.children.map((item: PersonModel, index: number) => {
           return compilePrint(() => {
-            const type = personModel.age > 6 ? 1 : 2;;
+            const type = item.age > 6 ? 1 : 2;;
             const typeStr = type == 1 ? "幼儿园" : "没上学";;
             const attachInfo = index < 1 ? "这个孩子失踪了" : "";
-            return <h2 className={styles.title} key={personModel.name}>{personModel.name} {typeStr} {attachInfo}</h2>;
+            return <h2 className={styles.title} key={item.name}>{item.name} {typeStr} {attachInfo}</h2>;
           })
         })
       }
@@ -36,28 +37,6 @@ function Home({ Model }: any) {
 }
 export default Home;
 
-
-const personModel = Type.Object({
-  result: "@item" as any,
-  name: Type.String(),
-  age: Type.Number()
-});
-type PersonModel = Static<typeof personModel>;
-
-const rootModel = Type.Object({
-  result: "@Model" as any,
-  data: Type.Object({
-    basic: { ...personModel },
-    children: Type.Array({ ...personModel })
-  }),
-  context: Type.Object({
-    query: Type.Object({
-      postId: Type.Number()
-    })
-  })
-});
-type RootModel = Static<typeof rootModel>;
-const modelGroups = { personModel, rootModel };
 export async function getStaticProps(context: any) {
   if (process.env.NODE_ENV == "development") {
     let data = null;
