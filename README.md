@@ -45,16 +45,10 @@ function Home({ Model }: any) {
       })}
       {
         data.children.map((personModel: PersonModel, index: number) => {
-          const type = compile(() => {
-            return personModel.age > 6 ? 1 : 2;
-          });
-          const typeStr = compile(() => {
-            return type == 1 ? "幼儿园" : "没上学";
-          })
-          const attachInfo = compile(() => {
-            return index < 1 ? "这个孩子失踪了" : ""
-          })
           return compilePrint(() => {
+            var type = personModel.age > 6 ? 1 : 2;;
+            var typeStr = type == 1 ? "幼儿园" : "没上学";;
+            var attachInfo = index < 1 ? "这个孩子失踪了" : "";
             return <h2 className={styles.title} key={personModel.name}>{personModel.name} {typeStr} {attachInfo}</h2>;
           })
         })
@@ -88,10 +82,10 @@ razor View
         foreach (var item in @Model.data.children)
         {
           {
-            var result_hgpnit = item.age > 6 ? 1 : 2;
-            var result_ns3jrf = result_hgpnit == 1 ? "幼儿园" : "没上学";
-            var result_8oc289 = index < 1 ? "这个孩子失踪了" : "";
-            <h2 class="styles_title__nx61M">@item.name @result_ns3jrf @result_8oc289</h2>
+            var type = item.age > 6 ? 1 : 2;
+            var typeStr = type == 1 ? "幼儿园" : "没上学";
+            var attachInfo = index < 1 ? "这个孩子失踪了" : "";
+            <h2 class="styles_title__nx61M">@item.name @typeStr @attachInfo</h2>
           }
           index++;
         }

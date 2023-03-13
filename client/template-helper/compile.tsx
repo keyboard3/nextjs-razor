@@ -101,6 +101,7 @@ function transferCompile(code: string, enterCallback?: (path: any, t: any) => bo
   const namesMap: any = {};
   const whiteListNames = { ...global.compile.whiteListNames };
   let programBodyCode = "", prefixInstructionCode = "";
+
   traverse(ast, {
     exit(path: any) {
       const isRoot = path.node.type === 'Program' && !path.parentPath;
@@ -226,8 +227,15 @@ function transferCompile(code: string, enterCallback?: (path: any, t: any) => bo
   return { programBodyCode, prefixInstructionCode }
   function replaceIdentifierNode(innerPath: any, oldName: string, force: boolean = false) {
     const { node: innerNode } = innerPath as any;
-    if (newNamesNodeMap[innerNode.name] || whiteListNames[innerNode.name])
+    if (newNamesNodeMap[innerNode.name])
       return;
+    if (whiteListNames[innerNode.name]) {
+      //当<div>使用的原始变量时，保留该变量</div>
+      if (!global.compile.whiteListNames[innerNode.name] && t.isArrayExpression(innerPath.parent))
+        innerPath.replaceWith(t.stringLiteral(`@${innerNode.name}`))
+      return;
+    }
+
 
     let newName = ""
     if (!force && namesMap[oldName]) newName = namesMap[oldName];

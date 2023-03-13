@@ -1,6 +1,7 @@
 import ReactDOMServer from "react-dom/server";
 import { TSchema } from '@sinclair/typebox'
 import { ReactElement } from "react";
+import {cleanCode} from "./helper.mjs";
 
 export function compilePrintValue(instruction: string) {
   return <div dangerouslySetInnerHTML={{ __html: `<!--${instruction}-->` }}></div>;
@@ -144,6 +145,10 @@ export function proxyModel<T>(data: TSchema, modelGroups: { [key: string]: TSche
 
 
 function removeCsharpScope(content: string) {
-  content = content.replace(/@/g, "");
-  return content && (content + "\n")
+  content = cleanCode(content);
+
+  const regex = /([\s\S]+?)(<\w+.*?>.*?<\/\w+>)/g;
+  content = content.replace(regex, (match, p1, p2) => p1.replace(/@/g, '') + p2);
+
+  return content;
 }

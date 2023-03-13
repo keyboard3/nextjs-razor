@@ -1,6 +1,7 @@
 import fse from "fs-extra"
 import fs from "fs"
 import path from "path"
+import { cleanCode } from "../template-helper/helper.mjs";
 
 await fse.removeSync("../../server/wwwroot/");
 await fse.removeSync("../../server/Views/");
@@ -34,12 +35,7 @@ async function changeNameAllFiles(dirPath) {
             if (oldFile == newFile) return;
             await fse.moveSync(oldFile, newFile, { overwrite: true })
             let content = fs.readFileSync(newFile).toString()
-            content = content.replace(/<!-- -->/g,"");
-            content = content.replace(/<div><!--/g, "").replace(/--><\/div>/g, "");
-            content = content.replace(/<!--/g, "").replace(/-->/g, "");
-            content = content.replace(/\/\*#__PURE__\*\//g, "");
-            content = content.replace(/undefined/g, "");
-            content = content.replace(/>;/g,">");
+            content = cleanCode(content);
             content = handleSameVar(content);
             content = content.replace(/@media/g, `@("@")media`);
             content = content.replace(`"pageProps":{"Model":{}}`, `"pageProps":{"Model":@Html.Raw(Json.Serialize(@Model))}`);
