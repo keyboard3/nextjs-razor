@@ -49,9 +49,7 @@ export const normalValue: NormalValueFunc = (data: TSchema | NormalReactElement 
     if (isNormalReactElement(data)) return data;
     if (isReactElement(data)) {
       const htmlStr = ReactDOMServer.renderToString(data)
-      //找到所有变量，然后读取他们的指令
-      if (pureHtml) meta.result = `@Html.Raw($@"${htmlStr.replace(/@([\w.]+)/g, "{$1}")}")`;
-      else meta.result = htmlStr;
+      meta.result = htmlStr;
     } else {
       //代理对象和指令对象
       meta.value = data.value || data;
@@ -66,27 +64,32 @@ export const normalValue: NormalValueFunc = (data: TSchema | NormalReactElement 
       vDOM = new Proxy(vDOM, {
         get(target: any, prop: any, receiver: any): any {
           //console.log("proxy get",prop,meta,"-----target",target);
+          if(prop=="toString") return meta.result;
+          if(prop=="valueOf") return ()=>meta.result;
           if (prop == "map") {
             return function (itemCall: (item: any, index: number) => any) {
 
               const itemCallCode = itemCall.toString();
               const itemArray = /\((.+?)\b/.exec(itemCallCode)
               const modelName = itemArray?.[1] || "item";
-              const itemModel = modelGroups![modelName];
+              let itemModel = modelGroups![modelName] as any;
+             
+              if (!itemModel && meta.value?.type == "array") itemModel = meta.value.items;
+              itemModel.properties = itemModel.properties || {};
+              itemModel.properties["result"] = "@item";
 
               const arrayItem = normalValue(itemModel);
               let itemResult: NormalReactElement = itemCall(arrayItem, 0); //普通js函数调用，可能是 普通js变量,归一化对象，虚拟dom
-              const resultName = itemResult.meta.result.replace("@", "");
-
               const renderModel: MetaType = {
                 instruction: "",
                 result: `${meta.instruction}
-              @{ var ${resultName} = @Html.Raw(""); int index=0; }
-              @foreach(var item in ${meta.result}) {
-                ${loopCsharpScope(itemResult.meta.instruction)
-                    .trim().replace(new RegExp(`var ${resultName}`, "g"), `${resultName}`)}\n@Html.Raw($@"{${resultName}}");
-                index++;
-              }`
+@{ 
+  index=0; 
+  foreach(var item in ${meta.result}) {
+    ${removeCsharpScope(ReactDOMServer.renderToString(itemResult))}
+    index++;
+  }
+}`
               }
               return normalValue(renderModel);
             }
@@ -125,11 +128,8 @@ export const normalValue: NormalValueFunc = (data: TSchema | NormalReactElement 
   } else {
     meta.value = data;
     meta.result = data;
-    if (typeof meta.result == "string") {
-      meta.result = `"${meta.result}"`;
-    }
   }
-  htmlProperty.__html = `<!--${meta.result}-->`;
+  htmlProperty.__html = `<!--${meta.instruction||""}${meta.result}-->`;
   vDOM.meta = meta;
   return vDOM;
 }
@@ -143,7 +143,7 @@ export function proxyModel<T>(data: TSchema, modelGroups: { [key: string]: TSche
 }
 
 
-function loopCsharpScope(content: string) {
+function removeCsharpScope(content: string) {
   content = content.replace(/@{([\s\S]+)}/, "{$1}");
   return content && (content + "\n")
 }

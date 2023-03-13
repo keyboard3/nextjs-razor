@@ -2,6 +2,7 @@ import React from 'react'
 import { compile, compilePrint } from "../../template-helper/compile";
 import { proxyModel } from '../../template-helper/proxy';
 import { Static, Type } from '@sinclair/typebox'
+import styles from "./styles.module.css";
 
 function Home({ Model }: any) {
   const { data } = proxyModel<RootModel>(Model, modelGroups);
@@ -12,7 +13,7 @@ function Home({ Model }: any) {
     return type == 1 ? "中老年" : "青年";
   })
   return (
-    <div>
+    <div >
       <h1>{data.basic.name}</h1>
       {compilePrint(() => {
         switch (type) {
@@ -31,8 +32,8 @@ function Home({ Model }: any) {
           const attachInfo = compile(() => {
             return index < 1 ? "这个孩子失踪了" : ""
           })
-          return compile(() => {
-            return <h2 key={personModel.name}>{personModel.name} {typeStr} {attachInfo}</h2>;
+          return compilePrint(() => {
+            return <h2 className={styles.title} key={personModel.name}>{personModel.name} {typeStr} {attachInfo}</h2>;
           })
         })
       }

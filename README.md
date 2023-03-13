@@ -27,7 +27,7 @@
 Next.js 页面
 ```jsx
 function Home({ Model }: any) {
-  const { data } = proxyModel(Model, modelGroups);
+  const { data } = proxyModel<RootModel>(Model, modelGroups);
   const type = compile(() => {
     return data.basic.age > 35 ? 1 : 2;
   });
@@ -35,7 +35,7 @@ function Home({ Model }: any) {
     return type == 1 ? "中老年" : "青年";
   })
   return (
-    <div>
+    <div >
       <h1>{data.basic.name}</h1>
       {compilePrint(() => {
         switch (type) {
@@ -44,18 +44,22 @@ function Home({ Model }: any) {
         }
       })}
       {
-        data.children.map((personModel: any) => {
+        data.children.map((personModel: PersonModel, index: number) => {
           const type = compile(() => {
-            return personModel.age > 10 ? 1 : 2;
+            return personModel.age > 6 ? 1 : 2;
           });
           const typeStr = compile(() => {
             return type == 1 ? "幼儿园" : "没上学";
           })
-          return compile(() => {
-            return <h2>{personModel.name} {typeStr}</h2>;
+          const attachInfo = compile(() => {
+            return index < 1 ? "这个孩子失踪了" : ""
+          })
+          return compilePrint(() => {
+            return <h2 className={styles.title} key={personModel.name}>{personModel.name} {typeStr} {attachInfo}</h2>;
           })
         })
       }
+
     </div>
   );
 }
@@ -63,30 +67,35 @@ export default Home;
 ```
 razor View
 ```c#
-<div><h1>@Model.data.basic.name</h1>
-@{
-var result_i3wm3t = @Model.data.basic.age > 35 ? 1 : 2;
-result_i3wm3t = @Model.data.basic.age > 35 ? 1 : 2;
-var result_212s0h = @result_i3wm3t == 1 ? "中老年" : "青年";
-switch (@result_j0778w) {
-  case 1:
-    <h1>@result_o6mf7p 当前年龄:@Model.data.basic.age</h1>;
-    break;
-  default:
-    <h1>@result_o6mf7p 当前年龄:@Model.data.basic.age</h1>;
-    break;
-}}
-
-@{ var result_k3qurn = @Html.Raw(""); }
-@foreach(var item in @Model.data.children) {
-  {
-  var result_m4ca3k = @item.age > 10 ? 1 : 2;
-  var result_c4ufiw = @result_m4ca3k == 1 ? "幼儿园" : "没上学";
-
-  result_k3qurn=@Html.Raw($@"<h2>{item.name} {result_c4ufiw}</h2>");
-  result_k3qurn = @Html.Raw($@"<h2>{item.name} {result_c4ufiw}</h2>");
-  }
-  @Html.Raw($@"{result_k3qurn}");
-}
-</div></div>
+<div id="__next">
+    <div>
+      <h1>@Model.data.basic.name</h1>@{
+        var result_r5ykhn = Model.data.basic.age > 35 ? 1 : 2;
+        result_r5ykhn = Model.data.basic.age > 35 ? 1 : 2;
+        var result_fyxjlw = result_r5ykhn == 1 ? "中老年" : "青年";
+        switch (@result_r5ykhn)
+        {
+          case 1:
+            <h1>@result_fyxjlw 当前年龄: @Model.data.basic.age</h1>
+            break;
+          default:
+            <h1>@result_fyxjlw 当前年龄: @Model.data.basic.age</h1>
+            break;
+        }
+      }
+      @{
+        index = 0;
+        foreach (var item in @Model.data.children)
+        {
+          {
+            var result_hgpnit = item.age > 6 ? 1 : 2;
+            var result_ns3jrf = result_hgpnit == 1 ? "幼儿园" : "没上学";
+            var result_8oc289 = index < 1 ? "这个孩子失踪了" : "";
+            <h2 class="styles_title__nx61M">@item.name @result_ns3jrf @result_8oc289</h2>
+          }
+          index++;
+        }
+      }
+    </div>
+  </div>
 ```
